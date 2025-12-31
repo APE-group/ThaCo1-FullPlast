@@ -2,7 +2,7 @@ The source code is developed in Python 3 and follows an object-oriented programm
 
 Below is a comprehensive guide designed to facilitate your understanding of the code structure. See `ThaCo3/README.md` file for the execution command, through the main script `thaco.py`.
 
-- **Code Structure**: 
+- **Code Structure**:
   - `Parent_Network`: This class initializes the neural network. It is responsible for creating arrays for training and test datasets, initializing neural network layers and noise inputs, interconnecting them, and setting the network parameters.
   - `Parent_Train`: Dedicated to loading the training dataset into arrays, this class divides the data into features and labels.
   - `Parent_Test`: Similar to `Parent_Train`, this class loads the test dataset into arrays and separates them into features and labels.
