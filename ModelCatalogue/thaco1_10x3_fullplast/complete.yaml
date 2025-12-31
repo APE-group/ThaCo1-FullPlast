@@ -1,0 +1,854 @@
+# Model: `thaco1_10x3_fullplast`
+
+# Model parameters can be further tuned in tune.yaml file,
+# and (some of them) in CLI args of `thaco.py` script.
+# Changes there overwrite values here.
+
+# Directory Parameters
+
+# null values refer to non existing objects
+
+paths:
+  code_dir: "/path/to/dir/SourceCode"
+  input_dir: "/path/to/dir/Dataset/PreprocessedData/MonoarealNonFoveal"
+  output_dir: "/path/to/dir/Output/thaco_scirep_3x3_sleep_cycles_2019"
+
+# Network Parameters
+
+parameters:
+
+  simulation:
+    simulation_name: 'test_scirep_3x3_sleep_cycles_2019'
+    trial_id: ''
+    stages: ['awake_training', 'nrem']
+    save_all_output: False
+    nest_seed: ''                      # provide integer or empty string
+    numpy_seed: ''                     # provide integer or empty string
+    mnist_training_seed: ''            # provide integer or empty string
+    mnist_test_seed: ''                # provide integer or empty string
+    n_trials: 1                        # number of independent trials to run
+    cycle: 1                           # number of learning cycles
+    test: 'classification'             # none: no awake classification stage
+                                       # classification: active awake classification stage
+                                       # retrieval: training set recognition task
+                                       # only: only awake classification stage
+  input:
+    dataset_selection:
+      training:
+        type: "deterministic"        #choose in: ["random", "deterministic"]
+        balanced: True               #choose in: [True, False]
+        shuffle: False
+      test:
+        type: "deterministic"            #choose in: ["random", "deterministic"]
+        balanced: False               #choose in: [True, False]
+        shuffle: False
+    dataset_index:
+      training: [ 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95 ] #provide a list o n_ranks_train * n_class integers
+      test: 3 #[ 0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2 ] #provide a list o n_ranks_test * n_class integers, or an integer to selct the first n_ranks * n_class examples
+    coding_number: 4
+    hemi_overlap: 0
+    n_fov: 9                           # 38 if FOVEAL input, 9 if non-FOVEAL input
+    scale: 64
+    n_class: 10                          # number of classes of training set
+    n_ranks_train: 3                    # number of training img per class
+    n_ranks_test: 3
+
+  default_network:                      #AWAKE CLASSIFICATION
+
+    name: 'default'
+
+    neuron:
+      th:
+        exc:
+          model: "aeif_cond_alpha"
+          a: 4                        #ns
+          b: 0.01                     #pA
+          C_m: 281                    #pF
+          Delta_T: 2                  #mV
+          E_L: -70.6                  #mV
+          E_ex: 0                     #mV
+          E_in: -85                   #mV
+          g_L: 30                     #nS
+          I_e: 0                      #pA
+          t_ref: 2                    #ms
+          tau_Ca: 10000               #ms
+          tau_minus: 20               #ms
+          tau_minus_triplet: 110      #ms
+          tau_syn_ex: 0.2             #ms
+          tau_syn_in: 2               #ms
+          tau_w: 144                  #ms
+          V_m: -70.6                  #mV
+          V_th: -50.4                 #mV
+          V_reset: -60                #mV
+        inh:
+          model: "aeif_cond_alpha"
+          a: 4                        #ns
+          b: 0.01                     #pA
+          C_m: 281                    #pF
+          Delta_T: 2                  #mV
+          E_L: -70.6                  #mV
+          E_ex: 0                     #mV
+          E_in: -85                   #mV
+          g_L: 30                     #nS
+          I_e: 0                      #pA
+          t_ref: 2                    #ms
+          tau_Ca: 10000               #ms
+          tau_minus: 20               #ms
+          tau_minus_triplet: 110      #ms
+          tau_syn_ex: 0.2             #ms
+          tau_syn_in: 2               #ms
+          tau_w: 144                  #ms
+          V_m: -70.6                  #mV
+          V_th: -50.4                 #mV
+          V_reset: -60                #mV
+
+      cx:
+        exc:
+          model: "aeif_cond_alpha"
+          a: 4                        #ns
+          b: 0.01                     #pA
+          C_m: 281                    #pF
+          Delta_T: 2                  #mV
+          E_L: -70.6                  #mV
+          E_ex: 0                     #mV
+          E_in: -85                   #mV
+          g_L: 30                     #nS
+          I_e: 0                      #pA
+          t_ref: 2                    #ms
+          tau_Ca: 10000               #ms
+          tau_minus: 20               #ms
+          tau_minus_triplet: 110      #ms
+          tau_syn_ex: 0.2             #ms
+          tau_syn_in: 2               #ms
+          tau_w: 144                  #ms
+          V_m:
+            distribution: 'uniform'
+            low: -71.2                #mV
+            high: -70                 #mV
+          V_th: -50.4                 #mV
+          V_reset: -60                #mV
+        inh:
+          model: "aeif_cond_alpha"
+          a: 4                        #ns
+          b: 0.01                     #pA
+          C_m: 281                    #pF
+          Delta_T: 2                  #mV
+          E_L: -70.6                  #mV
+          E_ex: 0                     #mV
+          E_in: -85                   #mV
+          g_L: 30                     #nS
+          I_e: 0                      #pA
+          t_ref: 2                    #ms
+          tau_Ca: 10000               #ms
+          tau_minus: 20               #ms
+          tau_minus_triplet: 110      #ms
+          tau_syn_ex: 0.2             #ms
+          tau_syn_in: 2               #ms
+          tau_w: 144                  #ms
+          V_m: -70.6                  #mV
+          V_th: -50.4                 #mV
+          V_reset: -60                #mV
+
+      ro:
+        exc:
+          model: "aeif_cond_alpha"
+          a: 4                        #ns
+          b: 0.01                     #pA
+          C_m: 281                    #pF
+          Delta_T: 2                  #mV
+          E_L: -70.6                  #mV
+          E_ex: 0                     #mV
+          E_in: -85                   #mV
+          g_L: 30                     #nS
+          I_e: 0                      #pA
+          t_ref: 2                    #ms
+          tau_Ca: 10000               #ms
+          tau_minus: 20               #ms
+          tau_minus_triplet: 110      #ms
+          tau_syn_ex: 0.2             #ms
+          tau_syn_in: 2               #ms
+          tau_w: 144                  #ms
+          V_m: -70.6                  #mV
+          V_th: -50.4                 #mV
+          V_reset: -60                #mV
+        inh:
+          model: "aeif_cond_alpha"
+          a: 4                        #ns
+          b: 0.01                     #pA
+          C_m: 281                    #pF
+          Delta_T: 2                  #mV
+          E_L: -70.6                  #mV
+          E_ex: 0                     #mV
+          E_in: -85                   #mV
+          g_L: 30                     #nS
+          I_e: 0                      #pA
+          t_ref: 2                    #ms
+          tau_Ca: 10000               #ms
+          tau_minus: 20               #ms
+          tau_minus_triplet: 110      #ms
+          tau_syn_ex: 0.2             #ms
+          tau_syn_in: 2               #ms
+          tau_w: 144                  #ms
+          V_m: -70.6                  #mV
+          V_th: -50.4                 #mV
+          V_reset: -60                #mV
+
+    structure:
+
+    #introduce cx, th, ro...
+
+      cx:
+        areas: 1                          # number of cortical areas
+        n_exc_ca: 20                      # number of neuron for each cortical cell assembly
+        #n_exc: areas * n_ranks_training * n_class * n_exc_ca # number of total exc neurons (defined by other parameters)
+        n_inh_fast: 200                    # number of total fast-spike inh neurons
+        n_inh_slow: 0                     # number of total slow-spike inh neurons
+        lesion: "none"                    # choose in: ["none", "intra", "inter", "both"]
+
+      th:
+        areas: 1                          # number of thalamic areas
+        n_inh: 200                        # number of inh neurons per area
+        #n_exc: n_fov * coding * 9        # number of total exc neurons (defined by other parameters)
+
+      ro:
+        areas: 1                          # number of readout areas
+        n_exc_ca: 1                      # number of neuron for each readout cell assembly
+        #n_exc: areas * n_class * n_exc_ca # number of total exc neurons (defined by other parameters)
+        n_inh: 0                          # number of total inh neurons
+
+
+    times:                                # ms
+      t_pause: !!float 0.4e3
+      t_img: !!float 0.2e3
+      t_relaxation: !!float 8e3
+
+    noise:
+
+      rates:                     #Hz
+        th:
+          exc: !!float 30e3
+          inh: null
+        cx:
+          exc_1: !!float 2e3
+          exc_2: null
+          inh:
+            relaxation: !!float 40e3
+            example: 0
+            pause: !!float 20e3
+        ro:
+          exc: !!float 30e3
+          inh: null
+
+      weights:                    #nS
+        th:
+          exc: 8
+          inh: null
+        cx:
+          exc_1: 15
+          exc_2: null
+          inh: 5
+        ro:
+          exc: 1.4
+          inh: null
+
+      delays:                     #ms
+
+        th:
+          exc: 1
+          inh: null
+        cx:
+          exc_1: 3
+          exc_2: null
+          inh: 1
+        ro:
+          exc: 1
+          inh: null
+
+    devices:
+
+      spike_recorder:
+
+        th:
+          exc: True
+          inh: True
+        cx:
+          exc: True
+          inh: True
+        ro:
+          exc: True
+          inh: null
+        noise:
+
+          th:
+            exc: False
+            inh: null
+          cx:
+            exc_1: False
+            exc_2: null
+            inh: False
+          ro:
+            exc: False
+            inh: null
+
+        multimeter:
+          th:
+            exc: False
+            inh: False
+          cx:
+            exc: False
+            inh: False
+          ro:
+            exc: False
+            inh: null
+          noise:
+            th:
+              exc: False
+              inh: null
+            cx:
+              exc_1: False
+              exc_2: null
+              inh: False
+            ro:
+              exc: False
+              inh: null
+
+    synapses:
+
+      conn_type:
+        conn_rule: 'all_to_all'
+        stdp_params:
+          model: 'stdp_synapse'
+          alpha: 1
+          lambda: 0
+          mu_plus: 1
+          mu_minus: 1
+          tau_plus: 20              #ms
+
+      conn_params:
+        th:
+          intra:
+            exc_exc:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+
+            exc_inh:
+              stdp: False
+              weight: 10
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: 1
+
+            inh_exc:
+              stdp: False
+              weight: -1
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: 1
+
+            inh_inh:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+
+            bwd:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+
+            fwd:
+              stdp: True
+              weight: 1
+              Wmax: 5.5
+              lambda: 0
+              autapses: null
+              delay: 1
+
+          inter:
+            exc_exc:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            exc_inh:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            inh_exc:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            inh_inh:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            bwd:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            fwd:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+
+        cx:
+          intra:
+            exc_exc:
+              stdp: True
+              weight:
+                distribution: 'uniform'
+                low: 0.001
+                high: 1
+              Wmax: 150
+              lambda: 0
+              autapses: True
+
+              delay:
+                distribution: 'exponential_clipped'
+                beta: 0.1
+                low: 1
+                high: 10
+
+            exc_inhf:
+              stdp: False
+              weight: 60
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: 1
+
+            exc_inhs:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+
+            inhf_exc:
+              stdp: False
+              weight: -4
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: 1
+
+            inhs_exc:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+
+            inhf_inhf:
+              stdp: False
+              weight: -4
+              Wmax: null
+              lambda: null
+              autapses: True
+              delay: 1
+
+            inhs_inhs:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+
+            inhf_inhs:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+
+            inhs_inhf:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+
+            bwd:
+              stdp: True
+              weight: 1
+              Wmax: 130
+              lambda: 0
+              autapses: null
+              delay: 1
+
+            fwd:
+              stdp: True
+              weight: 0.0001
+              Wmax: 154
+              lambda: 0
+              autapses: null
+              delay: 1
+
+          inter:
+            exc_exc:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            exc_inhf:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            exc_inhs:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            inhf_exc:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            inhs_exc:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            inhf_inhf:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            inhs_inhs:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            inhf_inhs:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            inhs_inhf:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            bwd:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            fwd:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+
+        ro:
+          intra:
+            exc_exc:
+              stdp: True
+              weight: 0
+              Wmax: 1
+              lambda: 0
+              autapses: False
+              delay: 1
+
+            exc_inh:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            inh_exc:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            inh_inh:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            bwd:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            fwd:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+
+          inter:
+            exc_exc:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            exc_inh:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            inh_exc:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            inh_inh:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            bwd:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+            fwd:
+              stdp: null
+              weight: null
+              Wmax: null
+              lambda: null
+              autapses: null
+              delay: null
+
+  awake_training:
+
+    name: 'awake_training'
+
+    times:
+      t_pause: !!float 0.4e3
+      t_img: !!float 0.4e3
+      t_relaxation: 0
+
+    noise:
+      rates:
+        cx:
+          exc_1: !!float 2e3
+          inh:
+            relaxation: 0
+            example: !!float 10e3
+            pause: !!float 40e3
+        ro:
+          exc: !!float 30e3
+      weights:
+        cx:
+          exc_1: 15
+          inh: 5
+        ro:
+          exc: 1.4
+      ou_noise:
+        theta: 0
+        dt_noise: !!float 0.4e3
+      contextual_noise:
+        si_group: 0
+        si_neuron: 0
+        si_th: 0
+        alfa_group: 0
+        alfa_neuron: 0
+
+    synapses:
+
+      conn_params:
+        th:
+          all: #intra:
+            fwd:
+              lambda: 0.03
+
+        cx:
+          all: #intra:
+            exc_exc:
+              lambda: 0.12
+            bwd:
+              lambda: 0.08
+            fwd:
+              lambda: 0
+
+  awake_test:
+
+    name: 'awake_test'
+
+    times:
+      t_pause: !!float 0.4e3
+      t_img: !!float 0.2e3
+      t_relaxation: !!float 8e3
+
+    neuron:
+      cx:
+        exc:
+          b: 0.01
+          tau_w: 144
+      th:
+        exc:
+          C_m: 281
+
+    noise:
+
+      rates: #Hz
+        th:
+          exc: !!float 30e3
+        cx:
+          exc_1: 0
+          exc_2: null
+          inh:
+            relaxation: !!float 40e3
+            example: 0
+            pause: !!float 20e3
+        ro:
+          exc: 0
+
+      weights: #nS
+        th:
+          exc: 8
+        cx:
+          exc_1: 15
+          exc_2: null
+          inh: 5
+        ro:
+          exc: 1.4
+
+    synapses:
+
+      conn_type:
+        stdp_params:
+          alpha: 1
+      conn_params:
+
+        th:
+          all:
+            fwd:
+              lambda: !!float 0
+
+        cx:
+          all:
+            exc_exc:
+              lambda: !!float 0
+            bwd:
+              lambda: !!float 0
+            fwd:
+              lambda: !!float 0
+          intra:
+            inhf_exc:
+                weight: -4
+
+  nrem:
+
+    name: 'nrem'
+
+    neuron:
+      cx:
+        exc:
+          b: 120
+          tau_w: 400
+
+    times:
+      t_thermalization: !!float 20e3
+      t_nrem: !!float 600e3
+      t_relaxation: 0
+
+    noise:
+      rates:
+        th:
+          exc: 0
+        cx:
+          exc_1: 710
+
+      weights:
+        th:
+          exc: 0
+        cx:
+          exc_1: 15
+
+    synapses:
+
+      conn_type:
+        stdp_params:
+          alpha: 20
+
+      conn_params:
+        cx:
+          intra:
+            exc_exc:
+              lambda: !!float 2e-06
+            inhf_exc:
+              weight: -0.5
+
+        th:
+          intra:
+            fwd:
+              modulation:
+                ratio: 1

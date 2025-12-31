@@ -1,0 +1,54 @@
+# Model: `thaco1_10x3_cxcxplast`
+
+# Tuning of model parameters contained in complete.yaml file.
+# Changes here overwrite values there.
+# Also notice that some parameters (e.g. the paths)
+# can be further modified through CLI args in `thaco.py` script.
+
+paths:
+  code_dir: "./SourceCode" #"/path/to/dir/SourceCode"
+  input_dir: "./Dataset/PreprocessedData/Scirep2019"# "/path/to/dir/Dataset/PreprocessedData/Scirep2019"
+  output_dir: "../Output/thaco_scirep_10x3_sleep_cycles_2019" #"/path/to/dir/Output/thaco_scirep_10x3_sleep_cycles_2019"
+
+parameters:
+  simulation:
+    trial_id: ''
+    simulation_name: 'thOff_train_deterministic_test_deterministic' #'test_scirep_10x3_sleep_cycles_2019'
+    stages: ['awake_training', 'nrem', 'nrem']
+    save_all_output: False
+    test: 'classification'
+    n_trials: 1
+
+  input:
+    dataset_selection:
+      training:
+        type: "deterministic"        #choose in: ["random", "deterministic"]
+        balanced: True               #choose in: [True, False]
+        shuffle: False
+      test:
+        type: "deterministic"            #choose in: ["random", "deterministic"]
+        balanced: False               #choose in: [True, False]
+        shuffle: False
+    dataset_index:
+      training: [0,1,2] #[ 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95 ] #provide a list o n_ranks_train * n_class integers
+      test: 250 #[ 0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2 ] #provide a list o n_ranks_test * n_class integers, or an integer to selct the first n_ranks * n_class examples
+    n_fov: 9
+    n_ranks_test: 3
+
+  nrem:
+    times:
+      t_thermalization: !!float 20e3
+      t_nrem: !!float 100e3     #milliseconds
+
+    neuron:
+      th:
+        exc:
+          C_m: 100000 #!!float 1e5 #to switch off the thalamo cortical loop set the thalamo-cortical connections modulation to 1e-20, on the thalamo cortical loop set the thalamo-cortical connections modulation to 100000
+
+    synapses:
+      conn_params:
+        th:
+          all:
+            fwd:
+              modulation:
+                ratio: 1

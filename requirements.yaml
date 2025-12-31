@@ -1,0 +1,20 @@
+name: thaco3
+channels:
+  - conda-forge
+  - bioconda
+  - nodefaults
+dependencies:
+  - numpy
+  - scipy
+  - matplotlib
+  - nest-simulator
+  - pip
+  - pytest-shutil
+  - psutil
+  - pyyaml
+  - scikit-learn
+  - statsmodels
+  - pip:
+    - gzip-reader
+    - opencv-python
+    - dictdiffer

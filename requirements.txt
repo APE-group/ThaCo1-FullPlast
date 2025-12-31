@@ -1,0 +1,11 @@
+numpy
+scipy
+matplotlib
+pytest-shutil
+psutil
+pyyaml
+gzip-reader
+scikit-learn
+statsmodels
+opencv-python
+dictdiffer
