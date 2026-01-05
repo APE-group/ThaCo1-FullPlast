@@ -6,16 +6,16 @@
 # can be further modified through CLI args in `thaco.py` script.
 
 paths:
-  code_dir: "./SourceCode" #"/path/to/dir/SourceCode"
-  input_dir: "./Dataset/PreprocessedData/Scirep2019"# "/path/to/dir/Dataset/PreprocessedData/Scirep2019"
-  output_dir: "../Output/thaco_scirep_10x3_sleep_cycles_2019" #"/path/to/dir/Output/thaco_scirep_10x3_sleep_cycles_2019"
+  code_dir: "/path/to/dir/SourceCode"
+  input_dir: "/path/to/dir/Dataset/PreprocessedData/mnist_hog324" #"/path/to/dir/Dataset/PreprocessedData/cifar10_resnet324"
+  output_dir: "/path/to/dir/Output/thaco1_10x3"
 
 parameters:
   simulation:
     trial_id: ''
-    simulation_name: 'thaco_revenge'
-    stages: ['awake_training', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nre\
-m', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem']
+    simulation_name: 'mnist_fullplast' #'cifar10_fullplast'
+    stages: ['awake_training', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem',
+             'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem']
     save_all_output: False
     test: 'classification'
     n_trials: 1
@@ -31,20 +31,20 @@ m', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem', 'nrem']
         balanced: True               #choose in: [True, False]
         shuffle: False
     dataset_index:
-      training: [0,1,2] #[ 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95, 93, 94, 95 ] #provide a list o n_ranks_train * n_class integers
-      test: 250 #[ 0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2,0,1,2 ] #provide a list o n_ranks_test * n_class integers, or an integer to selct the first n_ranks * n_class examples
+      training: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29] #provide a list o n_ranks_train * n_class integers
+      test: [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29] #provide a list o n_ranks_test * n_class integers
     n_fov: 9
-    n_ranks_test: 25
+    n_ranks_test: 3
 
   nrem:
     times:
-      t_thermalization: !!float 10e3
-      t_nrem: !!float 100e3     #milliseconds
+      t_thermalization: !!float 10e3     #milliseconds
+      t_nrem: !!float 100e3              #milliseconds
 
     neuron:
       th:
         exc:
-          C_m: 281 #!!float 1e5 #to switch off the thalamo cortical loop set the thalamo-cortical connections modulation to 1e-20, on the thalamo cortical loop set the thalamo-cortical connections modulation to 100000
+          C_m: 281                       #pF
 
     synapses:
       conn_params:
