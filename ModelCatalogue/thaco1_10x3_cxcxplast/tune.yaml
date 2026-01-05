@@ -44,7 +44,7 @@ parameters:
     neuron:
       th:
         exc:
-          C_m: 100000                    #pF
+          C_m: 281                    #pF
 
     synapses:
       conn_params:
