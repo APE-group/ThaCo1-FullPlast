@@ -1,0 +1,54 @@
+model:
+  input: mnist # mnist, cifar
+  plasticity: full # full, cxcx
+
+paths:
+  simdata_path: /Users/mac/Documents/Projects/ThaCo3/GitHub/Output/thaco_revenge_review1st/SimulationOutput/train_classes_10/train_example_3
+  root_save_path: /Users/mac/PycharmProjects/ThaCo1-FullPlast/Reviews/First/Q11
+  root_preprocdata_path: /Users/mac/Documents/Projects/ThaCo3/GitHub/Output/thaco_revenge_review1st/Analysis/Data/Q11_Q14
+
+network:
+  n_class: 10
+  n_ranks_train: 3
+  n_ranks_test: 25
+
+timing: #milliseconds
+  t_img_train: 400
+  t_img_test: 200
+  t_relaxation: 8000
+  t_pause: 400
+  t_nrem_therm: 10000
+  t_nrem: 100000
+  t_start_train: 0.1
+  t_start_nrem_therm: 0.1
+
+firing_rate: #Hz
+  dt_s_fr: 1
+  dt_ds_fr: 10
+  nu_t_high_fr: 50
+  nu_t_low_fr: null
+
+population_firing_rate: #milliseconds, Hz
+  dt_s: 0.1
+  dt_ds: 1
+  nu_t_high: 500
+  nu_t_low: null
+
+up_state: #milliseconds, Hz
+  smooth_ms: 5
+  min_up_duration_ms: 30
+  threshold_hz: 0.5
+
+synchronization:
+  compute: true
+  pairs:
+    - [cx_exc, th_exc]
+    - [cx_exc, cx_inh]
+    - [th_exc, th_inh]
+  downsample_ms: 1
+  event_padding_ms: 10
+
+preproc:
+  representative_trial_id: null
+  template_substage: learning
+  analysis_substage: sleep
