@@ -1,0 +1,90 @@
+execution:
+  debug: false
+
+analysis_keys:
+  accuracy_key: true
+  spikes_count_key: true
+  firing_rate_single_key: true
+  oscillations_key: true
+  syn_matrix_trial_key: true
+  syn_cats_key: true
+  syn_activity_key: true
+  dataset_similarity_key: true
+
+model:
+  experiments:
+    - config: startreview_mnist_fullplast
+      input_model: mnist_hog324
+    #- config: startreview_mnist_cxcxplast
+    #  input_model: mnist_hog324
+    #- config: startreview_cifar_fullplast
+    #  input_model: cifar10_resnet324
+    #- config: startreview_cifar_cxcxplast
+    #  input_model: cifar10_resnet324
+  prediction:
+    - neuron
+    - group
+    - class
+  train_example_shuffling: false
+  remove_trials: []
+  select_trials: []
+
+paths:
+  root_input_path: path/to/dir
+  root_save_path: path/to/dir
+  root_loadpath: path/to/dir
+
+network:
+  n_areas: 1
+  n_class: 10
+  n_ranks_train: 3
+  n_ranks_test: 25
+  n_exc_ca: 20
+  n_fov: 9
+  coding: 4
+  autapses: true
+
+synapses:
+  th_inh_exc: -1
+  cx_inh_exc: -4
+
+timing:
+  t_img_train: 400
+  t_img_test: 200
+  t_pause: 400
+  t_relaxation_test: 8000
+  t_nrem_therm: 10000
+  t_nrem: 100000
+
+stages_id: [00_awake_training, 01_nrem, 02_nrem, 03_nrem, 04_nrem, 05_nrem, 06_nrem, 07_nrem, 08_nrem, 09_nrem, 10_nrem,
+            11_nrem, 12_nrem, 13_nrem, 14_nrem, 15_nrem, 16_nrem, 17_nrem, 18_nrem, 19_nrem, 20_nrem]
+
+firing_rate_single:
+  dt_s_single:
+    low: 0.1
+    high: 0.1
+  dt_ds_single:
+    low: 5
+    high: 1
+  nu_t_high_single:
+    low: 132
+    high: 500
+  nu_t_low_single:
+    low: null
+    high: null
+
+oscillations:
+  dt_fr: 50
+  n_active: 15
+  thresh_osc: 0.25
+  sigma_t_osc_nrem: 1
+  sigma_t_osc_awake: 1
+
+dataset_similarity:
+  max_features_per_class: 6000
+  max_umap_samples: 6000
+  seed: 42
+  norm_factor: 81
+  n_components: 2
+  n_neighbors: 15
+  min_dist: 0.1
