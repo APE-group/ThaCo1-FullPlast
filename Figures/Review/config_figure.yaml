@@ -3,8 +3,8 @@ model:
   plasticity: full # full, cxcx
 
 paths:
-  root_save_path: /Users/mac/Documents/Projects/ThaCo3/GitHub/Output/thaco_revenge_review1st/Analysis/Data/gin/figures/NatureThaco1Revenge
-  root_preprocdata_path: /Users/mac/Documents/Projects/ThaCo3/GitHub/Output/thaco_revenge_review1st/Analysis/Data/gin/data_for_figures
+  root_save_path: path/to/dir
+  root_preprocdata_path: path/to/dir/data_for_figures
   figure_filename: fig6
 
 figure_style:
