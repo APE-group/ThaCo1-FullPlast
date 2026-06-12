@@ -25,7 +25,6 @@ paths_config = config['paths']
 network_config = config['network']
 timing_config = config['timing']
 stages_config = config['stages']
-reactivation_config = config['reactivation']
 
 fig_width = figure_style_config['fig_width'] / 25.4
 fig_height = figure_style_config['fig_height'] / 25.4
@@ -92,7 +91,7 @@ performance_stage_ids = tuple(up_states_dict['params']['performance_stage_ids'])
 analysis_substage = up_states_dict['params']['analysis_substage']
 template_class_id = np.asarray(reactivation_dict['params']['template_class_id'])
 dt_react = reactivation_dict['dt']['reactivation']
-single_track_observable = reactivation_config['single_track_observable']
+single_track_observable = 'similarity'
 
 #----------------------------- CONFIG-DEFINED SLEEP GROUPS
 sleep_stage_keys = tuple(stages_config['plot_stage_id'].keys())
@@ -105,7 +104,7 @@ t_sleep_interval_raster = timing_config['t_sleep_interval']['rastergram']
 t_sleep_interval_single_track_start = timing_config['t_sleep_interval']['single_track']['start']
 t_sleep_interval_single_track_stop = timing_config['t_sleep_interval']['single_track']['stop']
 n_templates = len(template_class_id)
-activation_strength_quantile = reactivation_config['activation_strength_quantile']
+activation_strength_quantile = 0
 
 #----------------------------- FIGURE 1 REPRESENTATIVE OBSERVABLES
 single_track_start_bin = int(np.floor(t_sleep_interval_single_track_start / dt_react))

@@ -39,11 +39,6 @@ timing: # milliseconds
   t_start_train: 0.1
   t_start_nrem_therm: 0.1
 
-reactivation:
-  activation_strength_quantile: 0
-  up_state_time_percentile: 100
-  single_track_observable: similarity # similarity, strength
-
 stages:
   stage_sleep:
     early: [01_nrem, 02_nrem]
