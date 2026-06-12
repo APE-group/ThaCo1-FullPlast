@@ -1,0 +1,56 @@
+model:
+  input: mnist # mnist, cifar
+  plasticity: full # full, cxcx
+
+paths:
+  root_save_path: /Users/mac/Documents/Projects/ThaCo3/GitHub/Output/thaco_revenge_review1st/Analysis/Data/gin/figures/NatureThaco1Revenge
+  root_preprocdata_path: /Users/mac/Documents/Projects/ThaCo3/GitHub/Output/thaco_revenge_review1st/Analysis/Data/gin/data_for_figures
+  figure_filename: fig6
+
+figure_style:
+  fig_width: 180
+  fig_height: 170
+  dpi: 500
+  linewidth: 1.2
+  fontsize_labels: 8
+  fontsize_panel_letters: 10
+  fontsize_title: 8
+  fontsize_legend: 6
+  fontsize_ticks: 6
+  labelpad: 1
+
+network:
+  n_class: 10
+  n_ranks_train: 3
+  n_ranks_test: 25
+
+timing: # milliseconds
+  t_img_train: 400
+  t_img_test: 200
+  t_relaxation: 8000
+  t_pause: 400
+  t_nrem_therm: 10000
+  t_nrem: 100000
+  t_sleep_interval:
+    rastergram: 50000
+    single_track:
+      start: 38000
+      stop: 42000
+  t_start_train: 0.1
+  t_start_nrem_therm: 0.1
+
+reactivation:
+  activation_strength_quantile: 0
+  up_state_time_percentile: 100
+  single_track_observable: similarity # similarity, strength
+
+stages:
+  stage_sleep:
+    early: [01_nrem, 02_nrem]
+    mid: [04_nrem, 05_nrem, 06_nrem, 07_nrem]
+    late: [12_nrem, 13_nrem, 14_nrem, 15_nrem, 16_nrem, 17_nrem, 18_nrem, 19_nrem, 20_nrem]
+  plot_stage_id:
+    early: 01_nrem
+    mid: 04_nrem
+    late: 20_nrem
+  plot_stage_key: early
