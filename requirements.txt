@@ -9,3 +9,4 @@ scikit-learn
 statsmodels
 opencv-python
 dictdiffer
+umap-learn
