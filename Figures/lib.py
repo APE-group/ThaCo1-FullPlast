@@ -1467,3 +1467,12 @@ def TransitionMatrix(spikes_neurons, stage, substage, params):
 
     return np.array(groups_activation)
 
+def stars_pvalue(p):
+    if p > 0.05:
+        return 'n.s.'
+    elif p <= 0.05 and p > 0.01:
+        return '*'
+    elif p <= 0.01 and p > 0.001:
+        return '**'
+    elif p <= 0.001:
+        return '***'
