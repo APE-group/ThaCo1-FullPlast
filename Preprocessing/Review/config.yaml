@@ -117,6 +117,6 @@ reactivation:
     nu_t_high_fr: 50
     nu_t_low_fr: null
     event_padding_ms: 50
-  representative_trial_id: null
+  representative_trial_id: 0Eo21Pgt50
   template_substage: learning
   analysis_substage: sleep
