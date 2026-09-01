@@ -459,6 +459,378 @@ def DetectUpStates(pop_signal, tstart, dt, up_state_cfg, n_neurons):
         'is_up': is_up,
     }
 
+def UpStateEvents(spikes_leaf, population_firing_rate_leaf, stage, substage, params, nconf=None):
+    up_state = params['up_state']
+    synchronization = params['synchronization']
+    time = params['times'][stage][substage]
+    tstart, tstop = time['start'], time['stop']
+    if nconf != None:
+        tstart, tstop = time['start'][nconf], time['stop'][nconf]
+
+    dt_up_detect = up_state['dt']['up_state_detection']
+    up_state_config = up_state['detection']
+    synchronization_event_padding_bins = synchronization['event_padding_bins']
+    areas = tuple(area for area in ('cx', 'th') if area in spikes_leaf and area in population_firing_rate_leaf)
+
+    n_time_bins = max(int(round((tstop - tstart) / dt_up_detect)), 0)
+    n_population_bins = min([np.asarray(population_firing_rate_leaf[area]).size for area in areas] + [n_time_bins])
+    synchronization_event_padding_bins = max(int(synchronization_event_padding_bins), 0)
+
+    if n_population_bins > 0:
+        detected_up_states = DetectUpStates(
+            np.asarray(population_firing_rate_leaf['cx']).ravel()[:n_population_bins],
+            tstart,
+            dt_up_detect,
+            up_state_config,
+            len(spikes_leaf['cx']))
+    else:
+        detected_up_states = {'states': []}
+
+    states = [
+        up_state for up_state in detected_up_states['states']
+        if (up_state['istart'] - synchronization_event_padding_bins >= 0)
+        and (up_state['istop'] + synchronization_event_padding_bins <= n_population_bins)]
+
+    up_state_tstart = np.asarray([up_state['tstart'] for up_state in states], dtype=float)
+    up_state_tstop = np.asarray([up_state['tstop'] for up_state in states], dtype=float)
+    up_state_tpeak = np.asarray([up_state['tpeak'] for up_state in states], dtype=float)
+    n_events = len(states)
+
+    population_rate_leaf = {
+        area: np.asarray(population_firing_rate_leaf[area], dtype=float).ravel()[:n_population_bins] / len(spikes_leaf[area])
+        for area in areas}
+    smooth_bins = max(int(round(up_state_config['smooth_ms'] / dt_up_detect)), 1)
+    population_rate_smooth_leaf = {
+        area: MovingAverage(population_rate_leaf[area], smooth_bins) if population_rate_leaf[area].size > 0 else population_rate_leaf[area]
+        for area in areas}
+
+    up_states_trial = {
+        'events': {
+            'up_state_id': np.asarray([up_state['id'] for up_state in states], dtype=np.int32),
+            'tstart_ms': up_state_tstart.astype(np.float32),
+            'tstop_ms': up_state_tstop.astype(np.float32),
+            'tpeak_ms': up_state_tpeak.astype(np.float32),
+            'duration_ms': np.asarray([up_state['duration'] for up_state in states], dtype=np.float32)},
+        'down_state_duration_ms': (up_state_tstart[1:] - up_state_tstop[:-1]).astype(np.float32),
+        'iwi_ms': (up_state_tpeak[1:] - up_state_tpeak[:-1]).astype(np.float32),
+        'firing_rate': {}}
+
+    for area in areas:
+        population_rate = population_rate_smooth_leaf[area]
+        up_state_population_rate = np.concatenate([
+            population_rate[up_state['istart']:up_state['istop']]
+            for up_state in states]) if n_events > 0 else np.array([])
+        up_states_trial['firing_rate'][area] = up_state_population_rate.astype(np.float32)
+
+    # Event windows stay on the Up-state grid; reactivation maps them explicitly.
+    event_window_index = [
+        (max(up_state['istart'] - synchronization_event_padding_bins, 0),
+         min(up_state['istop'] + synchronization_event_padding_bins, n_population_bins))
+        for up_state in states]
+    event_window_slice = [slice(istart, istop) for istart, istop in event_window_index]
+    population_trace_bins = max([istop - istart for istart, istop in event_window_index]) if n_events > 0 else 0
+
+    return {
+        'data': up_states_trial,
+        'states': states,
+        'population_rate_smooth': population_rate_smooth_leaf,
+        'event_window_slice': event_window_slice,
+        'population_trace_bins': population_trace_bins,
+        'smooth_bins': smooth_bins}
+
+def SleepSynchronization(events_leaf, up_state_leaf, stage, substage, params, nconf=None):
+    up_state = params['up_state']
+    synchronization = params['synchronization']
+    time = params['times'][stage][substage]
+    tstart, tstop = time['start'], time['stop']
+    if nconf != None:
+        tstart, tstop = time['start'][nconf], time['stop'][nconf]
+
+    population_firing_rate_config = up_state['population_firing_rate']
+    dt_up_detect = up_state['dt']['up_state_detection']
+    dt_s_pop = population_firing_rate_config['dt_s']
+    dt_ds_pop = population_firing_rate_config['dt_ds']
+    nu_t_high_pop = population_firing_rate_config['nu_t_high']
+    nu_t_low_pop = population_firing_rate_config['nu_t_low']
+    synchronization_population_keys = synchronization['population_keys']
+    synchronization_event_padding_bins = synchronization['event_padding_bins']
+
+    states = up_state_leaf['states']
+    population_rate_smooth_leaf = up_state_leaf['population_rate_smooth']
+    event_window_slice = up_state_leaf['event_window_slice']
+    population_trace_bins = up_state_leaf['population_trace_bins']
+    smooth_bins = up_state_leaf['smooth_bins']
+    n_events = len(states)
+    synchronization_event_padding_bins = max(int(synchronization_event_padding_bins), 0)
+    synchronization_trial = {
+        'population_firing_rate_trace': {},
+        'transition_time': {time_key: {} for time_key in (
+            'tstart_ms', 'tstop_ms', 'activation_time_ms', 'deactivation_time_ms')}}
+
+    for population_key in synchronization_population_keys:
+        area, neuron_type = population_key.split('_')
+        if neuron_type == 'exc':
+            population_rate = population_rate_smooth_leaf[area]
+        else:
+            spikes_inh = np.array(events_leaf[area]['evt_inh'], dtype=object)
+            if len(spikes_inh) > 0:
+                population_rate = FiringRate(
+                    spikes_inh,
+                    tstart,
+                    tstop,
+                    dt_s_pop,
+                    dt_ds_pop,
+                    nu_t_high_pop,
+                    nu_t_low_pop,
+                    remove_zeros=False,
+                    remove_pause=False)
+                population_rate = np.asarray(population_rate, dtype=float).ravel() / len(spikes_inh)
+            else:
+                population_rate = np.zeros(int(round((tstop - tstart) / dt_up_detect)))
+            population_rate = MovingAverage(population_rate, smooth_bins)
+
+        population_trace = np.full((n_events, population_trace_bins), np.nan, dtype=np.float32)
+        activation_time_ms = np.full(n_events, np.nan, dtype=np.float32)
+        deactivation_time_ms = np.full(n_events, np.nan, dtype=np.float32)
+        tstart_ms = np.full(n_events, np.nan, dtype=np.float32)
+        tstop_ms = np.full(n_events, np.nan, dtype=np.float32)
+
+        for nevent, (up_state, event_slice) in enumerate(zip(states, event_window_slice)):
+            event_trace = population_rate[event_slice]
+            population_trace[nevent, :event_trace.size] = event_trace
+            tstart_ms[nevent] = up_state['tstart']
+            tstop_ms[nevent] = up_state['tstop']
+            if population_key == 'cx_exc':
+                activation_time_ms[nevent] = up_state['tstart']
+                deactivation_time_ms[nevent] = up_state['tstop']
+            else:
+                activation_istart = up_state['istart']
+                activation_istop = min(up_state['istop'] + synchronization_event_padding_bins, population_rate.size)
+                activation_id = np.where(population_rate[activation_istart:activation_istop] > 0)[0]
+                if activation_id.size > 0:
+                    iact = activation_istart + activation_id[0]
+                    activation_time_ms[nevent] = tstart + iact * dt_up_detect
+                    deactivation_istart = iact
+                    deactivation_istop = min(up_state['istop'] + synchronization_event_padding_bins, population_rate.size)
+                    active_id = np.where(population_rate[deactivation_istart:deactivation_istop] > 0)[0]
+                    if active_id.size > 0:
+                        ideact = deactivation_istart + active_id[-1]
+                        deactivation_time_ms[nevent] = tstart + ideact * dt_up_detect
+
+        synchronization_trial['population_firing_rate_trace'][population_key] = population_trace.astype(np.float16)
+        synchronization_trial['transition_time']['tstart_ms'][population_key] = tstart_ms
+        synchronization_trial['transition_time']['tstop_ms'][population_key] = tstop_ms
+        synchronization_trial['transition_time']['activation_time_ms'][population_key] = activation_time_ms
+        synchronization_trial['transition_time']['deactivation_time_ms'][population_key] = deactivation_time_ms
+
+    return synchronization_trial
+
+def SleepReactivation(spikes_leaf, up_state_leaf, stage, substage, params, nconf=None,
+                      template_leaf=None, representative=False):
+    reactivation = params['reactivation']
+    network = params['network']
+    time = params['times'][stage][substage]
+    tstart, tstop = time['start'], time['stop']
+    if nconf != None:
+        tstart, tstop = time['start'][nconf], time['stop'][nconf]
+
+    firing_rate_config = reactivation['firing_rate_single']
+    dt_react = reactivation['dt']['reactivation']
+    dt_s_fr = firing_rate_config['dt_s_fr']
+    dt_ds_fr = firing_rate_config['dt_ds_fr']
+    nu_t_high_fr = firing_rate_config['nu_t_high_fr']
+    nu_t_low_fr = firing_rate_config['nu_t_low_fr']
+    event_padding_ms = firing_rate_config['event_padding_ms']
+    areas = tuple(area for area in ('cx', 'th') if area in spikes_leaf)
+
+    if stage == 'awake_training':
+        n_seq_train = reactivation['templates']['n_seq_train']
+        rem_pause = network['rem_pause'][substage]
+        template_dt = rem_pause['t_img'] + rem_pause['t_pause']
+        template_timg = rem_pause['t_img']
+        firing_rate_leaf = {
+            area: np.asarray([
+                FiringRate(
+                    spikes_neur,
+                    tstart,
+                    tstop,
+                    dt_s_fr,
+                    dt_ds_fr,
+                    nu_t_high_fr,
+                    nu_t_low_fr,
+                    remove_zeros=False,
+                    remove_pause=False)
+                for spikes_neur in spikes_leaf[area]])
+            for area in areas}
+        sequence_leaf = {area: firing_rate_leaf[area].T for area in areas}
+        template = {area: [] for area in areas}
+
+        for seq in range(n_seq_train):
+            template_tstart = tstart + rem_pause['t_pause'] + seq * template_dt
+            template_tstop = template_tstart + template_timg
+            istart = int(np.floor((template_tstart - tstart) / dt_react + 1e-12))
+            istop = int(np.floor((template_tstop - tstart) / dt_react + 1e-12))
+            for area in areas:
+                istart_area = int(np.clip(istart, 0, sequence_leaf[area].shape[0]))
+                istop_area = int(np.clip(istop, istart_area + 1, sequence_leaf[area].shape[0]))
+                template[area].append((np.max(sequence_leaf[area][istart_area:istop_area], axis=0) > 0).astype(float))
+
+        template = {area: np.asarray(template[area], dtype=float) for area in areas}
+        template_norm = {area: np.linalg.norm(template[area], axis=1) for area in areas}
+        template_norm = {area: np.where(template_norm[area] > 0, template_norm[area], 1.0) for area in areas}
+        return {'template': template, 'template_norm': template_norm}
+
+    awake_template_leaf = template_leaf['template']
+    awake_template_norm = template_leaf['template_norm']
+    states = up_state_leaf['states']
+    n_react_bins = int(round((tstop - tstart) / dt_react))
+    reactivation_states = [dict(up_state) for up_state in states]
+    MapStatesToReferenceBins(reactivation_states, tstart, dt_react, n_react_bins, prefix='react')
+
+    reactivation_events = []
+    for up_state in reactivation_states:
+        event_id = len(reactivation_events)
+        istart = up_state['istart_react']
+        istop = up_state['istop_react']
+        reactivation_events.append({
+            'id': event_id,
+            'up_state_id': up_state['id'],
+            'istart': istart,
+            'istop': istop,
+            'ipeak': up_state['ipeak_react'],
+            'tstart': tstart + istart * dt_react,
+            'tstop': tstart + istop * dt_react,
+            'tpeak': up_state['tpeak'],
+            'duration': (istop - istart) * dt_react})
+
+    n_events = len(reactivation_events)
+    reactivation_trial = {
+        'similarity': {
+            'templates': {},
+            'best_template_id': {},
+            'time_resolved_best_template': {},
+            'collected_best_template': {}},
+        'strength': {
+            'templates': {},
+            'best_template': {},
+            'collected_best_template': {}}}
+    single_track = None
+
+    if representative:
+        firing_rate_leaf = {
+            area: np.asarray([
+                FiringRate(
+                    spikes_neur,
+                    tstart,
+                    tstop,
+                    dt_s_fr,
+                    dt_ds_fr,
+                    nu_t_high_fr,
+                    nu_t_low_fr,
+                    remove_zeros=False,
+                    remove_pause=False)
+                for spikes_neur in spikes_leaf[area]])
+            for area in areas}
+        sleep_sequence_leaf = {area: firing_rate_leaf[area].T for area in areas}
+        templates_similarity_leaf = {
+            area: CosineSimilarity(sleep_sequence_leaf[area], awake_template_leaf[area])
+            for area in areas}
+        reactivation_strength_leaf = {
+            area: (sleep_sequence_leaf[area] @ awake_template_leaf[area].T) / awake_template_norm[area]
+            for area in areas}
+        single_track = {'similarity': templates_similarity_leaf, 'strength': reactivation_strength_leaf}
+    else:
+        templates_similarity_leaf = {}
+        reactivation_strength_leaf = {}
+
+    for area in areas:
+        n_templates = awake_template_leaf[area].shape[0]
+        if n_events == 0:
+            reactivation_trial['similarity']['templates'][area] = np.zeros((0, n_templates))
+            reactivation_trial['similarity']['best_template_id'][area] = np.array([], dtype=np.int32)
+            reactivation_trial['similarity']['time_resolved_best_template'][area] = np.empty((0, 0), dtype=np.float16)
+            reactivation_trial['similarity']['collected_best_template'][area] = np.array([], dtype=np.float32)
+            reactivation_trial['strength']['templates'][area] = np.zeros((0, n_templates))
+            reactivation_trial['strength']['best_template'][area] = np.array([], dtype=np.float32)
+            reactivation_trial['strength']['collected_best_template'][area] = np.array([], dtype=np.float32)
+            continue
+
+        if representative:
+            templates_similarity_event = np.asarray([
+                np.median(templates_similarity_leaf[area][event_k['istart']:event_k['istop']], axis=0)
+                for event_k in reactivation_events])
+        else:
+            event_similarity_leaf = []
+            event_strength_leaf = []
+            for event_k in reactivation_events:
+                event_tstart = event_k['tstart']
+                event_tstart_pad = max(tstart, event_tstart - event_padding_ms)
+                event_tstop_pad = min(tstop, event_k['tstop'] + event_padding_ms)
+                event_duration_bins = event_k['istop'] - event_k['istart']
+                crop_istart = int(round((event_tstart - event_tstart_pad) / dt_react))
+                crop_istop = crop_istart + event_duration_bins
+                event_firing_rate = np.asarray([
+                    FiringRate(
+                        spikes_neur,
+                        event_tstart_pad,
+                        event_tstop_pad,
+                        dt_s_fr,
+                        dt_ds_fr,
+                        nu_t_high_fr,
+                        nu_t_low_fr,
+                        remove_zeros=False,
+                        remove_pause=False)
+                    for spikes_neur in spikes_leaf[area]])
+                event_sequence = event_firing_rate.T[crop_istart:crop_istop]
+                event_similarity_leaf.append(CosineSimilarity(event_sequence, awake_template_leaf[area]))
+                event_strength_leaf.append((event_sequence @ awake_template_leaf[area].T) / awake_template_norm[area])
+            templates_similarity_event = np.asarray([
+                np.median(event_similarity, axis=0)
+                for event_similarity in event_similarity_leaf])
+
+        best_template_id = np.argmax(templates_similarity_event, axis=1)
+        max_event_bins = max([event_k['istop'] - event_k['istart'] for event_k in reactivation_events])
+        time_resolved_trace = np.full((n_events, max_event_bins), np.nan, dtype=np.float16)
+        collected_best_similarity = []
+        collected_best_strength = []
+
+        for event_k in reactivation_events:
+            if representative:
+                event_trace = templates_similarity_leaf[area][event_k['istart']:event_k['istop'],
+                                                           best_template_id[event_k['id']]]
+                event_strength = reactivation_strength_leaf[area][event_k['istart']:event_k['istop'],
+                                                               best_template_id[event_k['id']]]
+            else:
+                event_trace = event_similarity_leaf[event_k['id']][:, best_template_id[event_k['id']]]
+                event_strength = event_strength_leaf[event_k['id']][:, best_template_id[event_k['id']]]
+            if len(event_trace) > 0:
+                time_resolved_trace[event_k['id'], :len(event_trace)] = event_trace.astype(np.float16)
+                collected_best_similarity.append(event_trace.astype(np.float32))
+                collected_best_strength.append(event_strength.astype(np.float32))
+
+        if representative:
+            strength_templates = np.asarray([
+                np.median(reactivation_strength_leaf[area][event_k['istart']:event_k['istop']], axis=0)
+                for event_k in reactivation_events])
+        else:
+            strength_templates = np.asarray([
+                np.median(event_strength, axis=0)
+                for event_strength in event_strength_leaf])
+
+        reactivation_trial['similarity']['templates'][area] = templates_similarity_event
+        reactivation_trial['similarity']['best_template_id'][area] = best_template_id.astype(np.int32)
+        reactivation_trial['similarity']['time_resolved_best_template'][area] = time_resolved_trace
+        reactivation_trial['similarity']['collected_best_template'][area] = (
+            np.concatenate(collected_best_similarity).astype(np.float32)
+            if len(collected_best_similarity) > 0 else np.array([], dtype=np.float32))
+        reactivation_trial['strength']['templates'][area] = strength_templates
+        reactivation_trial['strength']['best_template'][area] = strength_templates[np.arange(n_events), best_template_id]
+        reactivation_trial['strength']['collected_best_template'][area] = (
+            np.concatenate(collected_best_strength).astype(np.float32)
+            if len(collected_best_strength) > 0 else np.array([], dtype=np.float32))
+
+    return {'reactivation': reactivation_trial, 'single_track': single_track}
+
 def CosineSimilarity(x, y, eps=1e-12):
     x = np.asarray(x)
     y = np.asarray(y)
